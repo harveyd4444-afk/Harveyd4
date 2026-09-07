@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vedit Media — Qualified Prospects</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --coral: #FF5733; --coral-light: rgba(255,87,51,0.1); --coral-border: rgba(255,87,51,0.25);
+    --charcoal: #111; --charcoal-2: #1a1a1a; --charcoal-3: #222;
+    --border: #2a2a2a; --border-mid: #333;
+    --green: #4ade80; --amber: #fbbf24; --red: #f87171; --blue: #60a5fa; --purple: #c084fc;
+    --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--charcoal); color: #d0d0d0; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(17,17,17,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: #bbb; }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  .nav-right { font-family: var(--mono); font-size: 11px; color: #444; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  .header { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; }
+  h1 { font-size: 26px; font-weight: 300; color: #f0f0f0; letter-spacing: -0.02em; }
+  h1 strong { font-weight: 600; }
+  .header-sub { font-size: 13px; color: #555; margin-top: 4px; }
+
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat-card { background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
+  .stat-num { font-size: 22px; font-weight: 600; color: var(--coral); line-height: 1; }
+  .stat-label { font-size: 11px; color: #555; letter-spacing: 0.03em; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 10px; padding: 4px; width: fit-content; }
+  .tab-btn { padding: 8px 20px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: var(--sans); background: transparent; color: #555; transition: all 0.2s; }
+  .tab-btn.active { background: var(--coral); color: white; }
+  .tab-btn:hover:not(.active) { color: #ccc; }
+
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap input { width: 100%; background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 36px; color: #d0d0d0; font-size: 13px; font-family: var(--sans); outline: none; transition: border-color 0.2s; }
+  .search-wrap input:focus { border-color: #444; }
+  .search-wrap input::placeholder { color: #444; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #444; font-size: 13px; }
+  .filter-btn { background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: #666; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: var(--sans); }
+  .filter-btn:hover { border-color: #444; color: #ccc; }
+  .filter-btn.active { background: var(--coral-light); border-color: var(--coral-border); color: var(--coral); }
+  .sort-select { background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: #888; font-size: 12px; font-family: var(--sans); outline: none; cursor: pointer; }
+
+  .results-label { font-size: 12px; color: #444; margin-bottom: 14px; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px 20px; color: #444; }
+  .loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { text-align: center; padding: 40px 20px; color: var(--red); font-size: 13px; }
+
+  .prospects-grid { display: flex; flex-direction: column; gap: 10px; }
+
+  .prospect-card { background: var(--charcoal-2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+  .prospect-card:hover { border-color: #333; }
+  .prospect-card.expanded { border-color: rgba(255,87,51,0.3); }
+  .prospect-card.contacted { border-left: 3px solid var(--green); }
+
+  .card-header { display: grid; grid-template-columns: 58px 1fr auto auto auto; align-items: center; gap: 14px; padding: 16px 18px; cursor: pointer; }
+
+  .tick-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-mid); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; flex-shrink: 0; color: #444; }
+  .tick-btn:hover { border-color: var(--green); color: var(--green); }
+  .tick-btn.ticked { border-color: var(--green); background: rgba(74,222,128,0.12); color: var(--green); }
+
+  .score-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid; }
+  .score-circle.strong { border-color: var(--green); background: rgba(74,222,128,0.08); }
+  .score-circle.possible { border-color: var(--amber); background: rgba(251,191,36,0.08); }
+  .score-circle.weak { border-color: var(--red); background: rgba(248,113,113,0.08); }
+  .score-circle.linkedin { border-color: var(--blue); background: rgba(96,165,250,0.08); }
+  .score-num { font-size: 15px; font-weight: 600; line-height: 1; }
+  .score-circle.strong .score-num { color: var(--green); }
+  .score-circle.possible .score-num { color: var(--amber); }
+  .score-circle.weak .score-num { color: var(--red); }
+  .score-circle.linkedin .score-num { color: var(--blue); font-size: 11px; }
+  .score-label-sm { font-size: 8px; color: #555; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .card-info { min-width: 0; }
+  .card-name { font-size: 14px; font-weight: 500; color: #f0f0f0; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-sub { font-size: 12px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .contacted-badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 100px; background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); white-space: nowrap; display: none; }
+  .prospect-card.contacted .contacted-badge { display: inline-flex; align-items: center; gap: 4px; }
+
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .tag { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 100px; white-space: nowrap; }
+  .tag-pdf { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+  .tag-no-pdf { background: rgba(156,163,175,0.1); color: #6b7280; border: 1px solid rgba(156,163,175,0.15); }
+  .tag-rating { background: rgba(251,191,36,0.1); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+  .tag-contact { background: rgba(96,165,250,0.1); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+  .tag-job { background: rgba(192,132,252,0.1); color: var(--purple); border: 1px solid rgba(192,132,252,0.2); }
+
+  .expand-btn { color: #444; font-size: 16px; transition: transform 0.25s, color 0.2s; flex-shrink: 0; }
+  .prospect-card.expanded .expand-btn { transform: rotate(180deg); color: var(--coral); }
+
+  .card-body { display: none; border-top: 1px solid var(--border); padding: 22px 18px; gap: 20px; grid-template-columns: 1fr 1fr; }
+  .prospect-card.expanded .card-body { display: grid; }
+  .card-section { display: flex; flex-direction: column; gap: 10px; }
+  .card-section.full { grid-column: 1 / -1; }
+  .section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--coral); display: flex; align-items: center; gap: 6px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .description-text { font-size: 13px; color: #888; line-height: 1.7; }
+  .item-list { display: flex; flex-direction: column; gap: 5px; }
+  .item-list li { font-size: 12px; color: #888; line-height: 1.5; padding-left: 14px; position: relative; list-style: none; }
+  .item-list li::before { content: '—'; position: absolute; left: 0; color: #444; }
+  .services-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .service-tag { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: rgba(96,165,250,0.08); color: var(--blue); border: 1px solid rgba(96,165,250,0.15); }
+
+  .email-box { background: var(--charcoal-3); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .email-body { font-size: 12px; color: #999; line-height: 1.7; white-space: pre-wrap; }
+  .copy-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 6px; background: var(--charcoal-2); border: 1px solid var(--border-mid); color: #666; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+  .copy-btn:hover { border-color: #444; color: #ccc; }
+  .copy-btn.copied { color: var(--green); border-color: rgba(74,222,128,0.3); }
+
+  .card-footer { display: none; border-top: 1px solid var(--border); padding: 12px 18px; background: rgba(0,0,0,0.2); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .prospect-card.expanded .card-footer { display: flex; }
+  .card-meta { font-family: var(--mono); font-size: 11px; color: #444; display: flex; gap: 16px; flex-wrap: wrap; }
+  .card-actions { display: flex; gap: 8px; }
+  .action-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: 7px; text-decoration: none; cursor: pointer; border: none; font-family: var(--sans); transition: all 0.2s; }
+  .btn-primary { background: var(--coral); color: white; }
+  .btn-primary:hover { background: #e84d2a; }
+  .btn-secondary { background: var(--charcoal-3); border: 1px solid var(--border-mid); color: #888; }
+  .btn-secondary:hover { border-color: #444; color: #ccc; }
+  .btn-disabled { background: var(--charcoal-3); border: 1px solid var(--border); color: #444; cursor: not-allowed; }
+  .btn-blue { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.3); color: var(--blue); }
+  .btn-blue:hover { background: rgba(96,165,250,0.25); }
+
+  .empty { text-align: center; padding: 60px 20px; color: #444; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .page-footer { border-top: 1px solid var(--border); padding: 24px 0; margin-top: 48px; }
+  .page-footer p { font-size: 12px; color: #333; text-align: center; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand"><span class="nav-dot"></span>Vedit Media &nbsp;/&nbsp; Prospect Dashboard</div>
+  <div class="nav-right" id="lastUpdated">Loading…</div>
+</nav>
+
+<div class="container">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1><strong>Prospect</strong> Dashboard</h1>
+        <div class="header-sub">AI-qualified leads across all pipelines · Updates live from Google Sheets</div>
+      </div>
+      <div class="stats" id="statsRow"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="companies">🏢 Companies House</button>
+      <button class="tab-btn" data-tab="linkedin">💼 LinkedIn Jobs</button>
+    </div>
+  </div>
+
+  <div class="tab-content active" id="tab-companies">
+    <div class="controls">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="chSearch" placeholder="Search company or industry…">
+      </div>
+      <button class="filter-btn active" data-filter="all" data-tab="ch">All</button>
+      <button class="filter-btn" data-filter="contacted" data-tab="ch">✓ Contacted</button>
+      <button class="filter-btn" data-filter="not-contacted" data-tab="ch">Not Contacted</button>
+      <button class="filter-btn" data-filter="pdf" data-tab="ch">PDF Ready</button>
+      <select class="sort-select" id="chSort">
+        <option value="score-desc">Score: High → Low</option>
+        <option value="score-asc">Score: Low → High</option>
+        <option value="date-desc">Date: Newest</option>
+        <option value="name-asc">Name: A → Z</option>
+      </select>
+    </div>
+    <div class="results-label" id="chResults"></div>
+    <div id="chGrid"><div class="loading"><div class="loading-spinner"></div><p>Fetching prospects…</p></div></div>
+  </div>
+
+  <div class="tab-content" id="tab-linkedin">
+    <div class="controls">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="liSearch" placeholder="Search company or industry…">
+      </div>
+      <button class="filter-btn active" data-filter="all" data-tab="li">All</button>
+      <button class="filter-btn" data-filter="contacted" data-tab="li">✓ Contacted</button>
+      <button class="filter-btn" data-filter="not-contacted" data-tab="li">Not Contacted</button>
+      <select class="sort-select" id="liSort">
+        <option value="date-desc">Date: Newest</option>
+        <option value="name-asc">Name: A → Z</option>
+      </select>
+    </div>
+    <div class="results-label" id="liResults"></div>
+    <div id="liGrid"><div class="loading"><div class="loading-spinner"></div><p>Fetching leads…</p></div></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-footer">
+    <p>Vedit Media · Automated Lead Qualification Pipeline · Powered by n8n + Gemini</p>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1KxO_w8DwXNaBmkEbl67siCacFI3yi64m6DbGmO5PJqc';
+const CH_GID   = '2124859429';
+const LI_GID   = '1513355090';
+
+const CH_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${CH_GID}`;
+const LI_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${LI_GID}`;
+
+const CH_KEY = 'vedit_ch_contacted';
+const LI_KEY = 'vedit_li_contacted';
+
+let CH_PROSPECTS = [];
+let LI_LEADS = [];
+
+let chFilter = 'all', chSearch = '', chSort = 'score-desc', chExpanded = null;
+let liFilter = 'all', liSearch = '', liSort = 'date-desc', liExpanded = null;
+
+// CSV parser
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split(/\r?\n/);
+  const headers = splitCSVLine(lines[0]);
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, j) => obj[h.trim()] = (vals[j] || '').trim());
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function safeJSON(str) {
+  try { return JSON.parse(str); } catch { return []; }
+}
+
+function parseCH(rows) {
+  return rows.map(r => ({
+    name: r['Company Name'] || '',
+    number: r['Company Number'] || '',
+    website: r['Website'] || '',
+    industry: r['Industry'] || '',
+    description: r['Company Description'] || '',
+    fitScore: parseInt(r['Fit Score']) || 0,
+    fitRating: r['Fit Rating'] || '',
+    reasons: safeJSON(r['Reasons for Score']),
+    services: safeJSON(r['Recommended Services']),
+    opportunities: safeJSON(r['Content Opportunities']),
+    signals: safeJSON(r['Commercial Signals']),
+    risks: safeJSON(r['Risks/Concerns']),
+    pdfStatus: r['PDF Status'] || '',
+    pdfLocation: r['PDF Location'] || '',
+    processingDate: r['Processing Date'] || '',
+  }));
+}
+
+function parseLI(rows) {
+  return rows.map(r => ({
+    name: r['Company Name'] || '',
+    website: r['Website'] || '',
+    industry: r['Industry'] || '',
+    jobPostUrl: r['Job Post URL'] || '',
+    contactName: r['Contact Name'] || '',
+    contactEmail: r['Contact Email'] || '',
+    jobTitle: r['Job Title Scraped'] || '',
+    researchSummary: r['Research Summary'] || '',
+    opportunity: r['Social Media Opportunity'] || '',
+    filterReason: r['Filter Reason'] || '',
+    dateProcessed: r['Date Processed'] || '',
+    subjectLine1: r['Subject Line 1'] || '',
+    emailVariation1: r['Email Variation 1'] || '',
+    subjectLine2: r['Subject Line 2'] || '',
+    emailVariation2: r['Email Variation 2'] || '',
+  }));
+}
+
+// Storage
+function getContacted(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } }
+function setContacted(key, id, val) { const d = getContacted(key); d[id] = val; localStorage.setItem(key, JSON.stringify(d)); }
+
+function scoreClass(s) { return s >= 80 ? 'strong' : s >= 65 ? 'possible' : 'weak'; }
+function formatDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  catch { return '—'; }
+}
+
+function renderStats() {
+  const chC = getContacted(CH_KEY);
+  const liC = getContacted(LI_KEY);
+  const totalContacted = Object.values(chC).filter(Boolean).length + Object.values(liC).filter(Boolean).length;
+  const pdfs = CH_PROSPECTS.filter(p => p.pdfStatus === 'Generated').length;
+  const avgScore = CH_PROSPECTS.length ? Math.round(CH_PROSPECTS.reduce((s,p) => s + p.fitScore, 0) / CH_PROSPECTS.length) : 0;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${CH_PROSPECTS.length}</div><div class="stat-label">CH Prospects</div></div>
+    <div class="stat-card"><div class="stat-num">${avgScore}</div><div class="stat-label">Avg Fit Score</div></div>
+    <div class="stat-card"><div class="stat-num">${pdfs}</div><div class="stat-label">PDFs Generated</div></div>
+    <div class="stat-card"><div class="stat-num">${LI_LEADS.length}</div><div class="stat-label">LinkedIn Leads</div></div>
+    <div class="stat-card"><div class="stat-num">${totalContacted}</div><div class="stat-label">Contacted</div></div>
+  `;
+}
+
+function filteredCH() {
+  const contacted = getContacted(CH_KEY);
+  return CH_PROSPECTS
+    .map((p, i) => ({ ...p, _idx: i }))
+    .filter(p => {
+      const ms = !chSearch || p.name.toLowerCase().includes(chSearch) || p.industry.toLowerCase().includes(chSearch);
+      const isC = !!contacted[p._idx];
+      const mf = chFilter === 'all' ? true : chFilter === 'contacted' ? isC : chFilter === 'not-contacted' ? !isC : chFilter === 'pdf' ? p.pdfStatus === 'Generated' : true;
+      return ms && mf;
+    })
+    .sort((a,b) => chSort === 'score-desc' ? b.fitScore - a.fitScore : chSort === 'score-asc' ? a.fitScore - b.fitScore : chSort === 'date-desc' ? new Date(b.processingDate) - new Date(a.processingDate) : a.name.localeCompare(b.name));
+}
+
+function renderCH() {
+  const data = filteredCH();
+  const contacted = getContacted(CH_KEY);
+  const resultsEl = document.getElementById('chResults');
+  const grid = document.getElementById('chGrid');
+  if (resultsEl) resultsEl.textContent = `Showing ${data.length} of ${CH_PROSPECTS.length} prospects`;
+  if (!data.length) { grid.innerHTML = `<div class="empty"><div class="empty-icon">◌</div><p>No prospects match your filters.</p></div>`; return; }
+  grid.innerHTML = data.map(p => {
+    const sc = scoreClass(p.fitScore);
+    const exp = chExpanded === p._idx;
+    const hasPDF = p.pdfStatus === 'Generated' && p.pdfLocation;
+    const isC = !!contacted[p._idx];
+    return `
+    <div class="prospect-card ${exp?'expanded':''} ${isC?'contacted':''}" id="ch-${p._idx}">
+      <div class="card-header" onclick="toggleCH(${p._idx})">
+        <div class="score-circle ${sc}"><div class="score-num">${p.fitScore}</div><div class="score-label-sm">score</div></div>
+        <div class="card-info"><div class="card-name">${p.name}</div><div class="card-sub">${p.industry}</div></div>
+        <span class="contacted-badge">✓ Contacted</span>
+        <div class="card-tags">
+          <span class="tag tag-rating">${p.fitRating}</span>
+          <span class="tag ${hasPDF?'tag-pdf':'tag-no-pdf'}">${hasPDF?'✓ PDF':'No PDF'}</span>
+        </div>
+        <button class="tick-btn ${isC?'ticked':''}" onclick="tickCH(event,${p._idx})">${isC?'✓':'○'}</button>
+        <div class="expand-btn">▾</div>
+      </div>
+      <div class="card-body">
+        <div class="card-section full"><div class="section-label">Description</div><p class="description-text">${p.description}</p></div>
+        <div class="card-section"><div class="section-label">Why this score</div><ul class="item-list">${p.reasons.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="card-section"><div class="section-label">Commercial signals</div><ul class="item-list">${p.signals.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+        <div class="card-section"><div class="section-label">Recommended services</div><div class="services-tags">${p.services.map(s=>`<span class="service-tag">${s}</span>`).join('')}</div></div>
+        <div class="card-section"><div class="section-label">Content opportunities</div><ul class="item-list">${p.opportunities.map(o=>`<li>${o}</li>`).join('')}</ul></div>
+        <div class="card-section full"><div class="section-label">Risks &amp; concerns</div><ul class="item-list">${p.risks.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+      </div>
+      <div class="card-footer">
+        <div class="card-meta"><span>Co. ${p.number}</span><span>Processed ${formatDate(p.processingDate)}</span></div>
+        <div class="card-actions">
+          <a href="${p.website}" target="_blank" class="action-btn btn-secondary" onclick="event.stopPropagation()">↗ Website</a>
+          ${hasPDF?`<a href="${p.pdfLocation}" target="_blank" class="action-btn btn-primary" onclick="event.stopPropagation()">↓ View Proposal</a>`:`<span class="action-btn btn-disabled">No Proposal Yet</span>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filteredLI() {
+  const contacted = getContacted(LI_KEY);
+  return LI_LEADS
+    .map((l, i) => ({ ...l, _idx: i }))
+    .filter(l => {
+      const ms = !liSearch || l.name.toLowerCase().includes(liSearch) || l.industry.toLowerCase().includes(liSearch);
+      const isC = !!contacted[l._idx];
+      const mf = liFilter === 'all' ? true : liFilter === 'contacted' ? isC : liFilter === 'not-contacted' ? !isC : true;
+      return ms && mf;
+    })
+    .sort((a,b) => liSort === 'date-desc' ? new Date(b.dateProcessed) - new Date(a.dateProcessed) : a.name.localeCompare(b.name));
+}
+
+function renderLI() {
+  const data = filteredLI();
+  const contacted = getContacted(LI_KEY);
+  const resultsEl = document.getElementById('liResults');
+  const grid = document.getElementById('liGrid');
+  if (resultsEl) resultsEl.textContent = `Showing ${data.length} of ${LI_LEADS.length} leads`;
+  if (!data.length) { grid.innerHTML = `<div class="empty"><div class="empty-icon">◌</div><p>No leads match your search.</p></div>`; return; }
+  grid.innerHTML = data.map(l => {
+    const exp = liExpanded === l._idx;
+    const isC = !!contacted[l._idx];
+    return `
+    <div class="prospect-card ${exp?'expanded':''} ${isC?'contacted':''}" id="li-${l._idx}">
+      <div class="card-header" onclick="toggleLI(${l._idx})">
+        <div class="score-circle linkedin"><div class="score-num">LI</div><div class="score-label-sm">lead</div></div>
+        <div class="card-info"><div class="card-name">${l.name}</div><div class="card-sub">${l.industry} · Hiring: ${l.jobTitle}</div></div>
+        <span class="contacted-badge">✓ Contacted</span>
+        <div class="card-tags">
+          <span class="tag tag-job">${l.jobTitle}</span>
+          ${l.contactEmail?`<span class="tag tag-contact">✓ Contact</span>`:''}
+        </div>
+        <button class="tick-btn ${isC?'ticked':''}" onclick="tickLI(event,${l._idx})">${isC?'✓':'○'}</button>
+        <div class="expand-btn">▾</div>
+      </div>
+      <div class="card-body">
+        <div class="card-section full"><div class="section-label">Company Summary</div><p class="description-text">${l.researchSummary}</p></div>
+        <div class="card-section full"><div class="section-label">Why they're a fit</div><p class="description-text">${l.filterReason}</p></div>
+        <div class="card-section full"><div class="section-label">Opportunity</div><p class="description-text">${l.opportunity}</p></div>
+        <div class="card-section full">
+          <div class="section-label">Email Variation 1 — ${l.subjectLine1}</div>
+          <div class="email-box"><div class="email-body" id="em1-${l._idx}">${l.emailVariation1}</div><button class="copy-btn" onclick="copyEmail(event,'em1-${l._idx}',this)">⎘ Copy email</button></div>
+        </div>
+        <div class="card-section full">
+          <div class="section-label">Email Variation 2 — ${l.subjectLine2}</div>
+          <div class="email-box"><div class="email-body" id="em2-${l._idx}">${l.emailVariation2}</div><button class="copy-btn" onclick="copyEmail(event,'em2-${l._idx}',this)">⎘ Copy email</button></div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-meta"><span>${l.contactName} · ${l.contactEmail}</span><span>Processed ${formatDate(l.dateProcessed)}</span></div>
+        <div class="card-actions">
+          <a href="${l.website}" target="_blank" class="action-btn btn-secondary" onclick="event.stopPropagation()">↗ Website</a>
+          <a href="${l.jobPostUrl}" target="_blank" class="action-btn btn-blue" onclick="event.stopPropagation()">↗ Job Post</a>
+          <a href="mailto:${l.contactEmail}?subject=${encodeURIComponent(l.subjectLine1)}&body=${encodeURIComponent(l.emailVariation1)}" class="action-btn btn-primary" onclick="event.stopPropagation()">✉ Open in Mail</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tickCH(e, idx) { e.stopPropagation(); const c = getContacted(CH_KEY); setContacted(CH_KEY, idx, !c[idx]); renderStats(); renderCH(); }
+function tickLI(e, idx) { e.stopPropagation(); const c = getContacted(LI_KEY); setContacted(LI_KEY, idx, !c[idx]); renderStats(); renderLI(); }
+function toggleCH(i) { chExpanded = chExpanded === i ? null : i; renderCH(); }
+function toggleLI(i) { liExpanded = liExpanded === i ? null : i; renderLI(); }
+function copyEmail(e, id, btn) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    btn.textContent = '✓ Copied'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copy email'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.getElementById('chSearch').addEventListener('input', e => { chSearch = e.target.value.toLowerCase(); chExpanded = null; renderCH(); });
+document.getElementById('chSort').addEventListener('change', e => { chSort = e.target.value; renderCH(); });
+document.querySelectorAll('[data-tab="ch"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab="ch"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); chFilter = btn.dataset.filter; chExpanded = null; renderCH();
+  });
+});
+document.getElementById('liSearch').addEventListener('input', e => { liSearch = e.target.value.toLowerCase(); liExpanded = null; renderLI(); });
+document.getElementById('liSort').addEventListener('change', e => { liSort = e.target.value; renderLI(); });
+document.querySelectorAll('[data-tab="li"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab="li"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); liFilter = btn.dataset.filter; liExpanded = null; renderLI();
+  });
+});
+
+// Fetch live data
+async function loadData() {
+  try {
+    const [chRes, liRes] = await Promise.all([
+      fetch(CH_URL), fetch(LI_URL)
+    ]);
+    if (!chRes.ok || !liRes.ok) throw new Error('Sheet fetch failed');
+    const [chText, liText] = await Promise.all([chRes.text(), liRes.text()]);
+    CH_PROSPECTS = parseCH(parseCSV(chText));
+    LI_LEADS = parseLI(parseCSV(liText));
+    const now = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('lastUpdated').textContent = `Last updated ${now}`;
+    renderStats(); renderCH(); renderLI();
+  } catch (err) {
+    document.getElementById('chGrid').innerHTML = `<div class="error-msg">Could not load data. Make sure the Google Sheet is set to "Anyone with the link can view".<br><br>${err.message}</div>`;
+    document.getElementById('liGrid').innerHTML = '';
+    document.getElementById('lastUpdated').textContent = 'Failed to load';
+  }
+}
+
+loadData();
+// Refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
